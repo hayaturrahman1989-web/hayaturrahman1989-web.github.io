@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hayaturrahman1989-web.github.io/sitemap.xml
