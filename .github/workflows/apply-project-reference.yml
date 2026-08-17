@@ -17,8 +17,8 @@ jobs:
 
       - name: Install supplied hero pipeline image
         run: |
-          if [ "$(ls hero-pipeline.part* 2>/dev/null | wc -l)" -eq 13 ]; then
-            cat hero-pipeline.part* > hero-pipeline.b64
+          if [ "$(ls hero-pipeline.part{01..08} 2>/dev/null | wc -l)" -eq 8 ]; then
+            cat hero-pipeline.part{01..08} > hero-pipeline.b64
             base64 -d hero-pipeline.b64 > hero-pipeline.webp
             rm -f hero-pipeline.b64 hero-pipeline.part*
           fi
