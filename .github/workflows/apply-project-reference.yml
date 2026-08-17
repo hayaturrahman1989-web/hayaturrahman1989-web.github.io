@@ -15,28 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Assemble supplied hero pipeline image
+      - name: Install supplied hero pipeline image
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import base64
-          parts = [
-              Path('hero3.part01').read_bytes()[:12000],
-              Path('hero3.part02').read_bytes()[:12000],
-              Path('hero3.part03').read_bytes()[:12000],
-              Path('hero3.part04').read_bytes()[:436],
-          ]
-          encoded = b''.join(parts)
-          encoded = b''.join(encoded.split())
-          image = base64.b64decode(encoded, validate=False)
-          Path('hero-pipeline.webp').write_bytes(image)
-          for p in Path('.').glob('hero3.part*'):
-              p.unlink()
-          for p in Path('.').glob('hero2.part*'):
-              p.unlink()
-          for p in Path('.').glob('hero-pipeline.part*'):
-              p.unlink()
-          PY
+          if [ -f hero-final.b64 ]; then
+            base64 -d -i hero-final.b64 > hero-pipeline.webp
+          fi
 
       - name: Set hero background
         run: |
@@ -52,13 +35,13 @@ jobs:
 
       - name: Remove temporary upload files
         run: |
-          rm -f hero-pipeline-temp.txt hero-pipeline-temp2.txt hero-pipeline-temp3.txt hero-pipeline-temp4.txt hero-pipeline-temp5.txt
+          rm -f hero-final.b64 hero3.part* hero2.part* hero-pipeline.part* hero-pipeline-temp.txt hero-pipeline-temp2.txt hero-pipeline-temp3.txt hero-pipeline-temp4.txt hero-pipeline-temp5.txt
 
       - name: Commit change
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html hero-pipeline.webp hero-pipeline.b64 hero3.part* hero2.part* hero-pipeline.part* hero-pipeline-temp*.txt
+          git add index.html hero-pipeline.webp hero-final.b64 hero3.part* hero2.part* hero-pipeline.part* hero-pipeline-temp*.txt
           git diff --cached --quiet && exit 0
           git commit -m 'Apply project reference background'
           git push
