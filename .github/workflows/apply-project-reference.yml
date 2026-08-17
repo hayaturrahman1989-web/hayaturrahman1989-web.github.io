@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install supplied hero pipeline image
+      - name: Install supplied hero pipeline image when all parts exist
         run: |
           if [ "$(ls hero3.part{01..03} 2>/dev/null | wc -l)" -eq 3 ]; then
             cat hero3.part{01..03} > hero-pipeline.b64
@@ -23,18 +23,19 @@ jobs:
             rm -f hero-pipeline.b64 hero3.part* hero2.part* hero-pipeline.part*
           fi
 
-      - name: Apply pipeline photo to hero background
+      - name: Set hero background
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          replacements = [
-              ("url('project-reference.jpg') center/cover", "url('hero-pipeline.webp') center/cover"),
-              ("url('engineering-bg.svg') center/cover", "url('hero-pipeline.webp') center/cover")
-          ]
-          for old, new in replacements:
-              s = s.replace(old, new, 1)
+          target = "url('hero-pipeline.webp') center/cover"
+          fallback = "url('project-reference.jpg') center/cover"
+          if Path('hero-pipeline.webp').exists():
+              s = s.replace("url('project-reference.jpg') center/cover", target, 1)
+              s = s.replace("url('engineering-bg.svg') center/cover", target, 1)
+          else:
+              s = s.replace(target, fallback, 1)
           p.write_text(s, encoding='utf-8')
           PY
 
