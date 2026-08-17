@@ -15,24 +15,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Apply reference photo to hero background
+      - name: Install supplied hero pipeline image
+        run: |
+          if [ -f hero-pipeline.b64 ]; then
+            base64 -d hero-pipeline.b64 > hero-pipeline.webp
+            rm -f hero-pipeline.b64
+          fi
+
+      - name: Apply pipeline photo to hero background
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          old = "background:linear-gradient(90deg,#062b51dd,#062b5190),url('engineering-bg.svg') center/cover"
-          new = "background:linear-gradient(90deg,#062b51e6,#062b5188),url('project-reference.jpg') center/cover"
-          if old in s:
+          replacements = [
+              ("url('project-reference.jpg') center/cover", "url('hero-pipeline.webp') center/cover"),
+              ("url('engineering-bg.svg') center/cover", "url('hero-pipeline.webp') center/cover")
+          ]
+          for old, new in replacements:
               s = s.replace(old, new, 1)
           p.write_text(s, encoding='utf-8')
           PY
+
+      - name: Remove temporary upload files
+        run: |
+          rm -f hero-pipeline-temp.txt hero-pipeline-temp2.txt hero-pipeline-temp3.txt hero-pipeline-temp4.txt hero-pipeline-temp5.txt
 
       - name: Commit change
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
+          git add index.html hero-pipeline.webp hero-pipeline.b64 hero-pipeline-temp*.txt
           git diff --cached --quiet && exit 0
-          git commit -m 'Apply project reference background'
+          git commit -m 'Apply pipeline hero background'
           git push
